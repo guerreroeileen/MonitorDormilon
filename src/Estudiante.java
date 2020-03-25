@@ -1,49 +1,47 @@
 import java.util.concurrent.Semaphore;
 
+/**
+ * 
+ * @author Eileen Guerrero, Juan Manuel
+ *
+ */
 public class Estudiante extends Thread {
 
-	// monitores y semaforos
-	private Semaphore monitor;
-	private Semaphore corredor;
+	private int studentNumber;
+	private Semaphore helpStudent;
+	private Semaphore salaDeEspera;
+	private Semaphore takeNap;
 
-	/**
-	 * cantidad de sillas
-	 */
-	private int cantidad_sillas;
-
-	/**
-	 * Nombre o identificador de ese estudiante
-	 */
-	private String nombre_estudiante;
-
-	/**
-	 * Me dice hasta cuando ese hilo debe esperar
-	 */
-	private boolean bandera;
-	
-	/**
-	 * Metodo constructor de la clase EEtudiante
-	 * @param moni
-	 * @param corre
-	 * @param nombre_estud
-	 */
-	public Estudiante(Semaphore moni, Semaphore corre, String nombre_estud) {
-		monitor = moni;
-		corredor = corre;
-		nombre_estudiante=nombre_estud;
-		bandera = false;
+	public Estudiante(int studentId, Semaphore help, Semaphore salaDeEspera, Semaphore nap) {
+		
+		this.helpStudent = help;
+		this.salaDeEspera = salaDeEspera;
+		this.studentNumber = studentId;
+		this.takeNap = nap;
 	}
-	
-	
 
 	/**
-	 * Metodo run. Administra el hilo del estudiante.
+	 * run method to control the thread
 	 */
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
 		while (true) {
-			
+			try {
+				salaDeEspera.acquire();
+				System.out.println("#" + studentNumber + " en sala de espera");
+				salaDeEspera.release();
+				System.out.println("#" + studentNumber + " esperando al monitor");
+				helpStudent.acquire();
+				takeNap.release();
+				System.out.println("#" + studentNumber + " está siendo atendido");
+				sleep((long) (Math.random() * 15000));
+				helpStudent.release();
+				System.out.println("#" + studentNumber + " fue atendido");
+				takeNap.acquire();
+
+			} catch (InterruptedException e) {
+				System.out.println("Error: "+e.getMessage());
+			}
 		}
 	}
 

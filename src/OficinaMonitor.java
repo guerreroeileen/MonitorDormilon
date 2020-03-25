@@ -1,132 +1,84 @@
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
+
+/**
+ * 
+ * @author Eileen Guerrero, Juan Manuel
+ *
+ */
 public class OficinaMonitor {
 
-	private int cantidad_sillas_total;
-	private int cantidad_sillas_disponibles;
+	private int studentsTotal;
+	private ArrayList<Estudiante> students;
+	private MonitorDormilon monitorDormilon;
+
+	//MONITOR ATENDIENDO UN ESTUDIANTE
+	private Semaphore atencionMonitor;
+	//SALA DE ESPERA
+	private Semaphore wainting;
 	
+	private Semaphore entrandoAlaSalaDeEspera;
+	//MONITOR DURMIENDO
+	private Semaphore takeNap;
 
-	private Semaphore corredor;
-	private Semaphore monitor;
-
-	
-	private  Estudiante estudiantes[];
-	private MonitorDormilon monitor_dormilon;
-	public MonitorDormilon getMonitor_dormilon() {
-		return monitor_dormilon;
-	}
-
-	public void setMonitor_dormilon(MonitorDormilon monitor_dormilon) {
-		this.monitor_dormilon = monitor_dormilon;
-	}
-
-	public Estudiante[] getEstudiantes() {
-		return estudiantes;
-	}
-
-	public void setEstudiantes(Estudiante[] estudiantes) {
-		this.estudiantes = estudiantes;
+	/**
+	 * Oficina monitor constructor
+	 * @param studentsTotal number of students that you want to play with
+	 */
+	public OficinaMonitor(int studentsTotal) {
+		this.studentsTotal = studentsTotal;
+		this.students = new ArrayList<Estudiante>();
+		this.atencionMonitor = new Semaphore(1, true);
+		this.wainting = new Semaphore(3,true);
+		this.entrandoAlaSalaDeEspera = new Semaphore(1,true);
+		this.takeNap = new Semaphore(1,true);
+		takeNap.drainPermits();
 	}
 
 	/**
-	 * Constructor de la clase principal
+	 * Create and start students threads
 	 */
-	public OficinaMonitor() {
-		// TODO Auto-generated constructor stub
-		cantidad_sillas_total = 3;
-		corredor = new Semaphore(1, true);
-		monitor = new Semaphore(1, true);
-	
+	public void inicializarYDespertarHilos() {
+		//CREANDO LA CANTIDAD DE ESTUDIANTES RECIBIDA POR PARAMENTRO
+		for (int i = 0; i < studentsTotal; i++) {
+			students.add(new Estudiante(i, atencionMonitor, wainting, takeNap));
+		}
+
+		monitorDormilon = new MonitorDormilon(takeNap);
+		monitorDormilon.start();
+
+		//INICIANDO CADA UNO DE LOS HILOS DE CADA ESTUDIANTE
+		for (int i = 0; i < students.size(); i++) {
+			students.get(i).start();
+		}
 	}
 
-	public int getCantidad_sillas_total() {
-		return cantidad_sillas_total;
-	}
-
-	public void setCantidad_sillas_total(int cantidad_sillas_total) {
-		this.cantidad_sillas_total = cantidad_sillas_total;
-	}
-
-	public int getCantidad_sillas_disponibles() {
-		return cantidad_sillas_disponibles;
-	}
-
-	public void setCantidad_sillas_disponibles(int cantidad_sillas_disponibles) {
-		this.cantidad_sillas_disponibles = cantidad_sillas_disponibles;
-	}
-
-	public Semaphore getCorredor() {
-		return corredor;
-	}
-
-	public void setCorredor(Semaphore corredor) {
-		this.corredor = corredor;
-	}
-
-	public Semaphore getMonitor() {
-		return monitor;
-	}
-
-	public void setMonitor(Semaphore monitor) {
-		this.monitor = monitor;
-	}
-
+	/**
+	 * Main thread for run all the program
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		System.out.println("Iniciando ejercicio Monitor Dormilon...");
-		
-		
-		OficinaMonitor oficina = new OficinaMonitor();
-		
 		System.out.println("Ingrese la cantidad de estudiantes:");
-		
-		
-		
 		InputStreamReader isr = new InputStreamReader(System.in);
+
 		BufferedReader br = new BufferedReader(isr);
 		try {
-			
 			String num_est = br.readLine();
 			int num = Integer.parseInt(num_est);
-			
-			
-			/**
-			 * definiendo cantidad de estudiantes
-			 */
-			oficina.setEstudiantes( new Estudiante[num]);
-				
-//			semaforoMonitor.drainPermits();
-//			semaforoSalaEspera.drainPermits();
-			
-			oficina.setMonitor_dormilon(new MonitorDormilon(oficina.getMonitor(), num));
-			oficina.getMonitor_dormilon().start();
-			int numero;
-			
-			
-			
-			for (int i = 0; i < oficina.getEstudiantes().length; i++) {
-				
-				
-				numero = i+1;
-				oficina.getEstudiantes()[i] = new Estudiante(oficina.getMonitor(), oficina.getCorredor(), "Estudiante: "+numero);
-				oficina.getEstudiantes()[i].start();
-				
-			}
-			oficina.getMonitor_dormilon().setEstudiantes(oficina.getEstudiantes());
-			
-			
-//			for (int i = 0; i < estudiantes.length; i++) {
-//				estudiantes[i].stop();
-//			}
-			
+
+			OficinaMonitor oficinaMonitorMainInstance = new OficinaMonitor(num);
+
+			oficinaMonitorMainInstance.inicializarYDespertarHilos();
+
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Error: "+e.getMessage());
 		}
-		
-		
-	}
+
 	}
 
 }

@@ -29,7 +29,7 @@ public class Estudiante extends Thread {
 	public void run() {
 		while (true) {
 			try {				
-				if(waiting.availablePermits()>0 && IrMonitoria.availablePermits()==1) {
+				if(waiting.availablePermits()>0 ) {
 					waiting.acquire();
 					System.out.println("#" + studentNumber + " en sala de espera");
 					IrMonitoria.acquire();

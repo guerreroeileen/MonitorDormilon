@@ -31,7 +31,7 @@ public class MonitorDormilon extends Thread {
 		while (true) {
 			try {
 				
-				if(waiting.availablePermits() == 3 && helpStudent.availablePermits()==1) {
+				if(waiting.availablePermits() == 3 ) {
 					takeNap.release();
 					System.out.println("Monitor durmiendo...");
 					sleep(2000);

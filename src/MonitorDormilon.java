@@ -8,6 +8,7 @@ import java.util.concurrent.Semaphore;
 public class MonitorDormilon extends Thread {
 
 	private Semaphore takeNap;
+	
 	private Semaphore waiting;
 	private Semaphore helpStudent;
 
@@ -31,9 +32,12 @@ public class MonitorDormilon extends Thread {
 			try {
 				
 				if(waiting.availablePermits() == 3 && helpStudent.availablePermits()==1) {
-					System.out.println("Monitor durmiendo");
+					takeNap.release();
+					System.out.println("Monitor durmiendo...");
+					sleep(2000);
 				}else {
 					takeNap.acquire();
+					System.out.println("Monitor esta atendiendo");
 				}
 			} catch (InterruptedException e) {
 				System.out.println("Error: "+e.getMessage());

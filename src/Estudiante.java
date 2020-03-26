@@ -9,15 +9,17 @@ public class Estudiante extends Thread {
 
 	private int studentNumber;
 	private Semaphore helpStudent;
-	private Semaphore salaDeEspera;
+	private Semaphore waiting;
 	private Semaphore takeNap;
+	private Semaphore IrMonitoria;
 
-	public Estudiante(int studentId, Semaphore help, Semaphore salaDeEspera, Semaphore nap) {
-		
+
+	public Estudiante(int studentId, Semaphore help, Semaphore salaDeEspera,Semaphore IrMonitoria, Semaphore nap) {		
 		this.helpStudent = help;
-		this.salaDeEspera = salaDeEspera;
+		this.waiting = salaDeEspera;
 		this.studentNumber = studentId;
 		this.takeNap = nap;
+		this.IrMonitoria=IrMonitoria;
 	}
 
 	/**
@@ -26,23 +28,31 @@ public class Estudiante extends Thread {
 	@Override
 	public void run() {
 		while (true) {
-			try {
-				salaDeEspera.acquire();
-				System.out.println("#" + studentNumber + " en sala de espera");
-				salaDeEspera.release();
-				System.out.println("#" + studentNumber + " esperando al monitor");
-				helpStudent.acquire();
-				takeNap.release();
-				System.out.println("#" + studentNumber + " está siendo atendido");
-				sleep((long) (Math.random() * 15000));
-				helpStudent.release();
-				System.out.println("#" + studentNumber + " fue atendido");
-				takeNap.acquire();
-
+			try {				
+				if(waiting.availablePermits()>0) {
+					waiting.acquire();
+					System.out.println("#" + studentNumber + " en sala de espera");
+					IrMonitoria.release();
+					System.out.println("#" + studentNumber + " esperando al monitor");
+					helpStudent.acquire();
+					waiting.release();
+					takeNap.release();			
+					System.out.println("#" + studentNumber + " está siendo atendido");
+					sleep((long) (Math.random() * 15000));
+					System.out.println("#" + studentNumber + " fue atendido");
+					helpStudent.release();
+					takeNap.release();	
+				}else {
+					IrMonitoria.release();
+					System.out.println("#"+ studentNumber + " se va a programar a la sala");
+					sleep((long) (Math.random() * 100000));
+				}
 			} catch (InterruptedException e) {
 				System.out.println("Error: "+e.getMessage());
 			}
 		}
 	}
+
+	
 
 }

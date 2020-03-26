@@ -21,7 +21,8 @@ public class OficinaMonitor {
 	//SALA DE ESPERA
 	private Semaphore wainting;
 	
-	private Semaphore entrandoAlaSalaDeEspera;
+	private Semaphore IrMonitoria;
+	
 	//MONITOR DURMIENDO
 	private Semaphore takeNap;
 
@@ -34,8 +35,10 @@ public class OficinaMonitor {
 		this.students = new ArrayList<Estudiante>();
 		this.atencionMonitor = new Semaphore(1, true);
 		this.wainting = new Semaphore(3,true);
-		this.entrandoAlaSalaDeEspera = new Semaphore(1,true);
+		this.IrMonitoria = new Semaphore(1,true);
 		this.takeNap = new Semaphore(1,true);
+		monitorDormilon = new MonitorDormilon(takeNap);
+		monitorDormilon.start();
 		takeNap.drainPermits();
 	}
 
@@ -43,17 +46,20 @@ public class OficinaMonitor {
 	 * Create and start students threads
 	 */
 	public void inicializarYDespertarHilos() {
-		//CREANDO LA CANTIDAD DE ESTUDIANTES RECIBIDA POR PARAMENTRO
-		for (int i = 0; i < studentsTotal; i++) {
-			students.add(new Estudiante(i, atencionMonitor, wainting, takeNap));
-		}
+		
+		if(wainting.availablePermits() == 3 && atencionMonitor.availablePermits()==1 && studentsTotal == 0){
+			monitorDormilon.getTakeNap().release();
+			System.out.println("Monitor durmiendo");
+		}else {
+			//CREANDO LA CANTIDAD DE ESTUDIANTES RECIBIDA POR PARAMENTRO
+			for (int i = 0; i < studentsTotal; i++) {
+				students.add(new Estudiante(i, atencionMonitor, wainting, IrMonitoria , takeNap));
+			}
 
-		monitorDormilon = new MonitorDormilon(takeNap);
-		monitorDormilon.start();
-
-		//INICIANDO CADA UNO DE LOS HILOS DE CADA ESTUDIANTE
-		for (int i = 0; i < students.size(); i++) {
-			students.get(i).start();
+			//INICIANDO CADA UNO DE LOS HILOS DE CADA ESTUDIANTE
+			for (int i = 0; i < students.size(); i++) {
+				students.get(i).start();
+			}
 		}
 	}
 
